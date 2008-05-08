@@ -380,7 +380,7 @@ function GetContent ($part,&$attachments) {
                 $fp = fopen($file, 'w');
                 fwrite($fp, $part->body);
                 fclose($fp);
-                @exec ('chmod 755 ' . $file);
+                chmod($file, 0755);
                 if ($config["USE_IMAGEMAGICK"] && $config["AUTO_SMART_SHARP"]) {
                             ImageMagickSharpen($file);
                 }
@@ -426,7 +426,7 @@ function GetContent ($part,&$attachments) {
                     $fp = fopen($file, 'w');
                     fwrite($fp, $part->body );
                     fclose($fp);
-                    @exec ('chmod 755 ' . $file);
+                    chmod($file, 0755);
                     $cid = trim($part->headers["content-id"],"<>");; //cids are in <cid>
 
                      if ($part->ctype_secondary == "3gpp"
@@ -469,7 +469,7 @@ function GetContent ($part,&$attachments) {
                                             escapeshellarg($file) .
                                             " -y -ss 00:00:01 -vframes 1 -an -sameq -f gif " . 
                                             escapeshellarg($scaledFile) );
-                                @exec ('chmod 755 ' . escapeshellarg($scaledFile));
+                                chmod(escapeshellarg($scaledFile), 0755);
 
                                 $attachments["html"][] .= '<!--Mime Type of File is '.$part->ctype_primary."/".$part->ctype_secondary.' --><div class="' . $config["3GPDIV"].'"><a href="' . $config["URLPHOTOSDIR"] . $fileName. '"><img src="' . $config["URLPHOTOSDIR"] . $scaledFileName . '" alt="' . $part->ctype_parameters['name'] . '" style="'.$config["IMAGESTYLE"].'" class="'.$config["IMAGECLASS"].'" /></a></div>' . "\n";
                              }
@@ -933,7 +933,7 @@ function ImageMagickSharpen($source,$dest = null) {
              escapeshellarg($source) . " ".
                 '\( +clone -modulate 100,0 \) \( +clone -unsharp 0x1+200+0 \) \( -clone 0 -edge 3 -colorspace GRAY -colors 256 -level 20%,95% -gaussian 10 -level 10%,95% \) -colorspace RGB -fx "u[0]+(((u[2]+1)/(u[1]+1))-1)*u[0]*u[3]" ' .
                 escapeshellarg($dest) );
-    @exec ('chmod 755 ' . escapeshellarg($dest));
+    chmod(escapeshellarg($dest), 0755);
 
 }
 function RotateImageWithImageMagick($file,$type,$rotation) {
@@ -945,7 +945,7 @@ function RotateImageWithImageMagick($file,$type,$rotation) {
                 escapeshellarg($file) .
                 " " .
                 escapeshellarg($file) );
-    @exec ('chmod 755 ' . escapeshellarg($file));
+    chmod(escapeshellarg($file), 0755);
 }
 function RotateImageWithGD($file,$type,$rotation) {
     $config = GetConfig();
@@ -978,7 +978,7 @@ function RotateImageWithGD($file,$type,$rotation) {
             }
             eval ('image'.$typePrefix.'($rotatedImage,$file);');
             imagedestroy($sourceImage);
-            @exec ('chmod 755 ' . escapeshellarg($file));
+            chmod(escapeshellarg($file), 0755);
         }
 }
 /**
@@ -1102,7 +1102,7 @@ function ResizeImageWithImageMagick($file,$type) {
                         " " .
                         escapeshellarg($scaledFile) );
 
-            @exec ('chmod 755 ' . escapeshellarg($scaledFile));
+            chmod(escapeshellarg($scaledFile), 0755);
     }
     return(array($scaledFileName,$fileName));
 
@@ -1138,7 +1138,7 @@ function ResizeImageWithGD($file,$type) {
                             $scaledW,$scaledH,
                             $sizeInfo[0],$sizeInfo[1]);
 			imagejpeg($scaledImage,$scaledFile,$config["JPEGQUALITY"]);
-            @exec ('chmod 755 ' . escapeshellarg($scaledFile));
+            chmod(escapeshellarg($scaledFile), 0755);
             imagedestroy($scaledImage);
             imagedestroy($sourceImage);
         }
@@ -1523,19 +1523,11 @@ function GetPostCategories(&$subject) {
             print("Working on $match\n"); 
             //Work on the category search to see if we can determine the cat_id	
             //check the database to see if their is a category similar
-            $sql_name = 'SELECT cat_ID 
-                         FROM ' . $wpdb->categories. ' 
-                         WHERE cat_name=\'' . addslashes($match) . '\'';
-            $sql_id = 'SELECT cat_ID 
-                       FROM ' . $wpdb->categories. ' 
-                       WHERE cat_ID=\'' . addslashes($match) . '\'';
-            $sql_sub_name = 'SELECT cat_ID 
-                             FROM ' . $wpdb->categories. ' 
-                             WHERE cat_name LIKE \'' . addslashes($match) . '%\' limit 1';
-
-                
+            $sql_name = 'SELECT wpt.term_id FROM wp_terms wpt INNER JOIN wp_term_taxonomy wptt ON wpt.term_id = wptt.term_id WHERE wptt.taxonomy = \'category\' AND wpt.name = \'' . addslashes($match) . '\'';
+            $sql_id = 'SELECT wpt.term_id FROM wp_terms wpt INNER JOIN wp_term_taxonomy wptt ON wpt.term_id = wptt.term_id WHERE wptt.taxonomy = \'category\' AND wpt.term_id = \'' . addslashes($match) . '\'';
+            $sql_sub_name = 'SELECT wpt.term_id FROM wp_terms wpt INNER JOIN wp_term_taxonomy wptt ON wpt.term_id = wptt.term_id WHERE wptt.taxonomy = \'category\' AND wpt.name LIKE \'' . addslashes($match) . '%\'';
             if ( $category = $wpdb->get_var($sql_name) ) {
-                //then category is a named and found 
+                //then category is a name and found 
             } elseif ( $category = $wpdb->get_var($sql_id) ) {
                 //then cateogry was an ID and found 
             } elseif ( $category = $wpdb->get_var($sql_sub_name) ) {

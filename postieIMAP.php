@@ -67,7 +67,7 @@ class PostieIMAP {
         if ($this->_self_cert) {
             $option .= "/novalidate-cert";
         }
-        if (eregi("google",$server) {
+        if (eregi("google",$server)) {
             //Fix from Jim Hodgson http://www.jimhodgson.com/2006/07/19/postie/
             $server_string = "{".$server.":".$port.$option."}INBOX";
         }
